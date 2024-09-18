@@ -3,12 +3,14 @@ version: '3'
 services:
   chrome:
     image: selenium/standalone-chrome
+    container_name: kit-cancellation-chrome
     platform: linux/x86_64
     networks:
-      - my_network
+      - kit-cancellation-network
 
   bot:
     image: r-kawano/kit-cancellation-bot
+    container_name: kit-cancellation-bot
     build:
       context: ../
       dockerfile: ./docker/bot/Dockerfile
@@ -22,8 +24,8 @@ services:
       - ./bot/posttoday.sh:/app/posttoday.sh
       - ./bot/cache:/app/cache
     networks:
-      - my_network
+      - kit-cancellation-network
 
 networks:
-  my_network:
+  kit-cancellation-network:
     driver: bridge

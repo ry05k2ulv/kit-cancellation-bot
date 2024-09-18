@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  chrome:
+    image: selenium/standalone-chrome
+    platform: linux/x86_64
+    networks:
+      - my_network
+
+  bot:
+    image: r-kawano/kit-cancellation-bot
+    build:
+      context: ../
+      dockerfile: ./docker/bot/Dockerfile
+    depends_on:
+      - chrome
+    volumes:
+      - ../src:/app/src
+      - ../.env:/app/.env
+      - ./bot/cron.d/python-job:/etc/cron.d/python-job
+      - ./bot/postnew.sh:/app/postnew.sh
+      - ./bot/posttoday.sh:/app/posttoday.sh
+      - ./bot/cache:/app/cache
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge

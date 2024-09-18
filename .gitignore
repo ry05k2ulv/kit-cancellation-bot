@@ -1,0 +1,4 @@
+.env
+cookies.pkl
+__pycache__
+*.db

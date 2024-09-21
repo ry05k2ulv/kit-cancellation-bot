@@ -1,3 +1,5 @@
-0 6 * * * /bin/bash /app/posttoday.sh >> /var/log/cron.log 2>&1
+55 5 * * * /bin/bash /app/posttoday.sh today >> /var/log/cron.log 2>&1
+
+55 17 * * * /bin/bash /app/posttoday.sh tomorrow >> /var/log/cron.log 2>&1
 
 */15 * * * * /bin/bash /app/postnew.sh >> /var/log/cron.log 2>&1

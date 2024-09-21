@@ -1,6 +1,6 @@
 """
 Description:
-    京都工芸繊維大学の当日の休講通知をXにポストするスクリプト
+    京都工芸繊維大学の当日・翌日の休講通知をXにポストするスクリプト
 
 Options:
     --env <path>: str = ".env"
@@ -13,17 +13,23 @@ Options:
         クッキーファイルのパス
     --database <path>: str = "cancellations.db"
         データベースファイルのパス
+    --when <date>: str = "today"
+        休講情報を取得する日付
+        - today: 本日
+        - tomorrow: 明日
 """
 
 import argparse
 import datetime
 import os
 import sys
+from logging import getLogger
 
 import dotenv
 
 from browser import init_driver, post_cancellation_list_in_bullet_points
-from database import Cancellation, create_database, get_cancellation_list_by_date
+from database import Cancellation, create_database, select_cancellation_list_by_date
+from debug import get_logger
 
 
 def parse_args():
@@ -33,11 +39,14 @@ def parse_args():
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--cookie", type=str, default="cookies.pkl")
     parser.add_argument("--database", type=str, default="cancellations.db")
+    parser.add_argument("--when", type=str, default="today")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    print("Start posttoday.py", file=sys.stderr)
+    # ロガーの設定
+    logger = get_logger(__file__)
+    logger.debug("Start")
 
     args = parse_args()
 
@@ -47,7 +56,7 @@ if __name__ == "__main__":
     x_password = os.getenv("X_PASSWORD")
 
     if None in (x_username, x_password):
-        print("", file=sys.stderr)
+        logger.error("Environment variables are not set")
         sys.exit(1)
 
     # WebDriverの初期化
@@ -56,9 +65,20 @@ if __name__ == "__main__":
     # データベースの初期化
     session = create_database(args.database)
 
-    # 今日の休講情報を取得
-    today = datetime.date.today().strftime("%Y/%-m/%-d")
-    cancellation_list = get_cancellation_list_by_date(session, today)
+    if args.when == "today":
+        # 今日の休講情報を取得
+        today = datetime.date.today().strftime("%Y/%-m/%-d")
+        cancellation_list = select_cancellation_list_by_date(session, today)
+        title = f"【今日({today})の休講情報】"
+    elif args.when == "tomorrow":
+        # 明日の休講情報を取得
+        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+        tomorrow = tomorrow.strftime("%Y/%-m/%-d")
+        cancellation_list = select_cancellation_list_by_date(session, tomorrow)
+        title = f"【明日({tomorrow})の休講情報】"
+    else:
+        logger.error("Invalid argument: --when")
+        sys.exit(1)
 
     # Xにポスト
     post_cancellation_list_in_bullet_points(
@@ -66,11 +86,11 @@ if __name__ == "__main__":
         x_username,
         x_password,
         args.cookie,
-        "【本日の休講情報】",
+        title,
         cancellation_list,
     )
 
     # 終了
     driver.quit()
 
-    print("End posttoday.py", file=sys.stderr)
+    logger.debug("End")

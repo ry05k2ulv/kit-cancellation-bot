@@ -6,3 +6,4 @@
     --headless \
     --cookie /app/cache/cookies.pkl \
     --database /app/cache/database.db \
+    --when $1

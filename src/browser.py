@@ -53,7 +53,7 @@ def fetch_cancellation_list(
     driver: WebDriver,
     username: str,
     password: str,
-) -> list[dict[str, str]]:
+) -> list[Cancellation]:
     # ログイン
     driver.get(KIT_CANCELLATION_URL)
     driver.find_element(By.ID, KIT_USERNAME_ID).send_keys(username)
@@ -66,18 +66,19 @@ def fetch_cancellation_list(
     for tr in tbody.find_elements(By.TAG_NAME, "tr")[1:]:
         td_list = tr.find_elements(By.TAG_NAME, "td")
         list.append(
-            {
-                "program": td_list[1].text,
-                "course": td_list[2].text,
-                "instructor": td_list[3].text,
-                "date": td_list[4].text,
-                "day_of_week": td_list[5].text,
-                "period": td_list[6].text,
-                "remarks": td_list[7].text,
-                "created_at": td_list[8].text,
-            }
+            Cancellation(
+                program=td_list[1].text,
+                course=td_list[2].text,
+                instructor=td_list[3].text,
+                date=td_list[4].text,
+                day_of_week=td_list[5].text,
+                period=td_list[6].text,
+                remarks=td_list[7].text,
+                published_at=td_list[8].text,
+            )
         )
     return list
+
 
 def login_x(
     driver: WebDriver,
@@ -110,21 +111,22 @@ def login_x(
     # クッキーを保存
     cookies = driver.get_cookies()
     pkl.dump(cookies, open(cookie_filename, "wb"))
-    
-def post_cancellation_list(
+
+
+def post_cancellation_list_individually(
     driver: WebDriver,
     username: str,
     password: str,
     cookie_filename: str,
     title: str,
-    cancellation_list: list[dict[str, str]],
+    cancellation_list: list[Cancellation],
 ):
     # ログイン
     login_x(driver, username, password, cookie_filename)
 
     # 休講情報をポスト
     for c in cancellation_list:
-        text = f"{title}%0a分類%E3%80%80：{c["program"]}%0a講義名：{c["course"]}%0a日付%E3%80%80：{c["date"]}({c["day_of_week"]}) {c["period"]}限%0a"
+        text = f"{title}%0a分類%E3%80%80：{c.program}%0a講義名：{c.course}%0a日付%E3%80%80：{c.date}({c.day_of_week}) {c.period}限%0a"
         url = X_POST_URL.format(text=text, hashtags="KIT休講情報")
         driver.get(url)
         elem = driver.find_element(By.XPATH, X_POST_XPATH)
@@ -141,17 +143,18 @@ def post_cancellation_list_in_bullet_points(
     title: str,
     cancellation_list: list[Cancellation],
 ):
-
     # ログイン
     login_x(driver, username, password, cookie_filename)
 
     # 休講情報をポスト
     if cancellation_list:
         page_size = 5
-        num_pages = len(cancellation_list) // page_size + (len(cancellation_list) % page_size > 0)
+        num_pages = len(cancellation_list) // page_size + (
+            len(cancellation_list) % page_size > 0
+        )
         for i in range(0, len(cancellation_list), page_size):
             text = f"{title} {i // page_size + 1}/{num_pages}%0a"
-            for c in cancellation_list[i:i + page_size]:
+            for c in cancellation_list[i : i + page_size]:
                 text += f"・{c.program} {c.period}限 {c.course}%0a"
             url = X_POST_URL.format(text=text, hashtags="KIT休講情報")
             driver.get(url)
@@ -168,4 +171,3 @@ def post_cancellation_list_in_bullet_points(
         elem.click()
 
         WebDriverWait(driver, 16).until(EC.url_changes(url))
-

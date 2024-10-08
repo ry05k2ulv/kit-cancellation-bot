@@ -27,7 +27,12 @@ from browser import (
     init_driver,
     post_cancellation_list_individually,
 )
-from database import Cancellation, create_database, insert_cancellation_if_not_exist
+from database import (
+    create_database,
+    insert_cancellation_list_if_not_exist,
+    select_cancellation_list_by_posted,
+    update_cancellation_list_posted,
+)
 from debug import get_logger
 
 
@@ -68,12 +73,11 @@ if __name__ == "__main__":
     # 京都工芸繊維大学の休講情報を取得
     cancellation_list = fetch_cancellation_list(driver, kit_username, kit_password)
 
-    # データベースに休講情報を挿入し，新着の休講情報を取得
-    new_list = []
-    for c in cancellation_list:
-        exist = insert_cancellation_if_not_exist(session, c)
-        if exist:
-            new_list.append(c)
+    # データベースに休講情報を挿入
+    insert_cancellation_list_if_not_exist(session, cancellation_list)
+
+    # 未ポストの休講情報を取得
+    new_list = select_cancellation_list_by_posted(session, False)
 
     # Xにポスト
     if new_list:
@@ -85,6 +89,9 @@ if __name__ == "__main__":
             "【新着の休講情報】",
             new_list,
         )
+
+    # ポスト済みに更新
+    update_cancellation_list_posted(session, new_list, True)
 
     # 終了
     driver.quit()

@@ -75,6 +75,7 @@ def fetch_cancellation_list(
                 period=td_list[6].text,
                 remarks=td_list[7].text,
                 published_at=td_list[8].text,
+                posted=False,
             )
         )
     return list

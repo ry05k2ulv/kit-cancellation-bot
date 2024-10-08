@@ -69,13 +69,13 @@ if __name__ == "__main__":
         # 今日の休講情報を取得
         today = datetime.date.today().strftime("%Y/%-m/%-d")
         cancellation_list = select_cancellation_list_by_date(session, today)
-        title = f"【今日({today})の休講情報】"
+        title = f"🌄【今日({today})の休講情報】"
     elif args.when == "tomorrow":
         # 明日の休講情報を取得
         tomorrow = datetime.date.today() + datetime.timedelta(days=1)
         tomorrow = tomorrow.strftime("%Y/%-m/%-d")
         cancellation_list = select_cancellation_list_by_date(session, tomorrow)
-        title = f"【明日({tomorrow})の休講情報】"
+        title = f"🌃【明日({tomorrow})の休講情報】"
     else:
         logger.error("Invalid argument: --when")
         sys.exit(1)

@@ -86,7 +86,7 @@ if __name__ == "__main__":
             x_username,
             x_password,
             args.cookie,
-            "【新着の休講情報】",
+            "❗️【新着の休講情報】",
             new_list,
         )
 

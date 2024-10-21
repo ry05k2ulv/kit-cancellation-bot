@@ -7,6 +7,7 @@ services:
     platform: linux/x86_64
     networks:
       - kit-cancellation-network
+    restart: always
 
   bot:
     image: r-kawano/kit-cancellation-bot
@@ -25,6 +26,7 @@ services:
       - ./bot/cache:/app/cache
     networks:
       - kit-cancellation-network
+    restart: always
 
 networks:
   kit-cancellation-network:
